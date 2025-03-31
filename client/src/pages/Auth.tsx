@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -16,12 +15,7 @@ const Auth: FC = () => {
   const [activeTab, setActiveTab] = useState<string>("login");
   const { user, isLoading, loginMutation, registerMutation } = useAuth();
   
-  // Redirect if already logged in
-  if (user) {
-    return <Redirect to="/dashboard" />;
-  }
-  
-  // Login form
+  // Define forms using hooks
   const loginForm = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -30,7 +24,6 @@ const Auth: FC = () => {
     }
   });
 
-  // Register form
   const registerForm = useForm({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -42,7 +35,8 @@ const Auth: FC = () => {
       role: "user"
     }
   });
-
+  
+  // Handle form submissions
   const onLoginSubmit = loginForm.handleSubmit((data) => {
     loginMutation.mutate(data);
   });
@@ -50,6 +44,11 @@ const Auth: FC = () => {
   const onRegisterSubmit = registerForm.handleSubmit((data) => {
     registerMutation.mutate(data);
   });
+  
+  // Redirect if already logged in - after all hooks are called
+  if (user) {
+    return <Redirect to="/dashboard" />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">

@@ -7,6 +7,7 @@ interface User {
   email: string;
   username: string;
   role: string;
+  accountType?: "student" | "individual" | "business";
 }
 
 interface UserContextType {
@@ -39,7 +40,8 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
     name: "John Smith",
     email: "john@example.com",
     username: "johnsmith",
-    role: "user"
+    role: "user",
+    accountType: "individual"
   };
   
   useEffect(() => {

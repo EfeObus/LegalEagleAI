@@ -97,6 +97,7 @@ const Sidebar: FC<SidebarProps> = ({ isOpen }) => {
           <Button 
             variant="outline" 
             className="mt-2 w-full py-1.5 bg-white text-primary text-sm font-medium border-primary/30 hover:bg-primary/5"
+            onClick={() => window.location.href = "mailto:efe.obukohwo@outlook.com?subject=Tekevwe Legal Assistant Support Request"}
           >
             Get Support
           </Button>

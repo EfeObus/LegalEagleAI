@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -11,15 +11,44 @@ import ContractGenerator from "@/pages/ContractGenerator";
 import LegalResearch from "@/pages/LegalResearch";
 import Collaboration from "@/pages/Collaboration";
 import RiskAnalysis from "@/pages/RiskAnalysis";
+import Auth from "@/pages/Auth";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import AIChatAssistant from "@/components/layout/AIChatAssistant";
 import { ProvinceProvider } from "@/contexts/ProvinceContext";
 import { UserProvider } from "@/contexts/UserContext";
-import { useState } from "react";
+import { useUser } from "@/contexts/UserContext";
+import { useState, useEffect } from "react";
 
-function Router() {
+// Protected route component
+function ProtectedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>; [key: string]: any }) {
+  const { user } = useUser();
+  const [, setLocation] = useLocation();
+  
+  useEffect(() => {
+    if (!user) {
+      setLocation("/auth");
+    }
+  }, [user, setLocation]);
+  
+  if (!user) return null;
+  
+  return <Component {...rest} />;
+}
+
+function AppContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const { user } = useUser();
+  const [location] = useLocation();
+  
+  // Don't show the main app layout on the auth page
+  if (location === "/auth") {
+    return (
+      <Switch>
+        <Route path="/auth" component={Auth} />
+      </Switch>
+    );
+  }
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -33,21 +62,37 @@ function Router() {
         <main className="flex-1 overflow-y-auto bg-neutral-50 h-full">
           <div className="container mx-auto px-4 py-6 max-w-7xl">
             <Switch>
-              <Route path="/" component={Dashboard} />
-              <Route path="/documents" component={Documents} />
-              <Route path="/templates" component={Templates} />
-              <Route path="/ai-assistant" component={AIAssistant} />
-              <Route path="/contract-generator" component={ContractGenerator} />
-              <Route path="/legal-research" component={LegalResearch} />
-              <Route path="/collaboration" component={Collaboration} />
-              <Route path="/risk-analysis" component={RiskAnalysis} />
+              <Route path="/">
+                {() => (user ? <Dashboard /> : <Auth />)}
+              </Route>
+              <Route path="/documents">
+                {() => <ProtectedRoute component={Documents} />}
+              </Route>
+              <Route path="/templates">
+                {() => <ProtectedRoute component={Templates} />}
+              </Route>
+              <Route path="/ai-assistant">
+                {() => <ProtectedRoute component={AIAssistant} />}
+              </Route>
+              <Route path="/contract-generator">
+                {() => <ProtectedRoute component={ContractGenerator} />}
+              </Route>
+              <Route path="/legal-research">
+                {() => <ProtectedRoute component={LegalResearch} />}
+              </Route>
+              <Route path="/collaboration">
+                {() => <ProtectedRoute component={Collaboration} />}
+              </Route>
+              <Route path="/risk-analysis">
+                {() => <ProtectedRoute component={RiskAnalysis} />}
+              </Route>
               <Route component={NotFound} />
             </Switch>
           </div>
         </main>
       </div>
       
-      <AIChatAssistant />
+      {user && <AIChatAssistant />}
     </div>
   );
 }
@@ -57,7 +102,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <UserProvider>
         <ProvinceProvider>
-          <Router />
+          <AppContent />
           <Toaster />
         </ProvinceProvider>
       </UserProvider>

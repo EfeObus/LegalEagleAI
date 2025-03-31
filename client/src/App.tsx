@@ -20,45 +20,17 @@ import Sidebar from "@/components/layout/Sidebar";
 import AIChatAssistant from "@/components/layout/AIChatAssistant";
 import Footer from "@/components/layout/Footer";
 import { ProvinceProvider } from "@/contexts/ProvinceContext";
-import { UserProvider } from "@/contexts/UserContext";
-import { useUser } from "@/contexts/UserContext";
-import { useState, useEffect } from "react";
-
-// Protected route component
-function ProtectedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>; [key: string]: any }) {
-  const { user } = useUser();
-  
-  useEffect(() => {
-    if (!user) {
-      window.location.href = "/auth";
-    }
-  }, [user]);
-  
-  if (!user) return null;
-  
-  return <Component {...rest} />;
-}
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { useState } from "react";
 
 function AppContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const { user } = useUser();
+  const { user } = useAuth();
   const [location] = useLocation();
   
   // Public pages (no layout)
   const isPublicPage = location === "/" || location === "/privacy-policy" || location === "/terms-of-service" || location === "/auth";
-  
-  // Check if page is a protected route that needs authentication
-  const isProtectedPage = location === "/dashboard" || location === "/documents" || 
-                       location === "/templates" || location === "/ai-assistant" || 
-                       location === "/contract-generator" || location === "/legal-research" || 
-                       location === "/collaboration" || location === "/risk-analysis";
-  
-  // If trying to access protected page without auth, redirect to auth
-  useEffect(() => {
-    if (isProtectedPage && !user) {
-      window.location.href = "/auth";
-    }
-  }, [isProtectedPage, user, location]);
   
   // Public pages layout
   if (isPublicPage) {
@@ -90,14 +62,14 @@ function AppContent() {
           <main className="flex-1 overflow-y-auto bg-neutral-50">
             <div className="container mx-auto px-4 py-6 max-w-7xl">
               <Switch>
-                <Route path="/dashboard" component={Dashboard} />
-                <Route path="/documents" component={Documents} />
-                <Route path="/templates" component={Templates} />
-                <Route path="/ai-assistant" component={AIAssistant} />
-                <Route path="/contract-generator" component={ContractGenerator} />
-                <Route path="/legal-research" component={LegalResearch} />
-                <Route path="/collaboration" component={Collaboration} />
-                <Route path="/risk-analysis" component={RiskAnalysis} />
+                <ProtectedRoute path="/dashboard" component={Dashboard} />
+                <ProtectedRoute path="/documents" component={Documents} />
+                <ProtectedRoute path="/templates" component={Templates} />
+                <ProtectedRoute path="/ai-assistant" component={AIAssistant} />
+                <ProtectedRoute path="/contract-generator" component={ContractGenerator} />
+                <ProtectedRoute path="/legal-research" component={LegalResearch} />
+                <ProtectedRoute path="/collaboration" component={Collaboration} />
+                <ProtectedRoute path="/risk-analysis" component={RiskAnalysis} />
                 <Route component={NotFound} />
               </Switch>
             </div>
@@ -114,12 +86,12 @@ function AppContent() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <UserProvider>
+      <AuthProvider>
         <ProvinceProvider>
           <AppContent />
           <Toaster />
         </ProvinceProvider>
-      </UserProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

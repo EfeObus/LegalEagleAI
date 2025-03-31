@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
@@ -11,53 +11,40 @@ import {
 import { generateLegalDocument, summarizeLegalDocument, legalChatAssistant, analyzeLegalRisk, getProvincialLawInfo } from "./openai";
 import { z, ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
+import { setupAuth } from "./auth";
 
-// Mock user for development purposes
-const MOCK_USER_ID = 1;
+// Middleware to check if user is authenticated
+const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.status(401).json({ message: "Not authenticated" });
+};
+
+// Helper function to get the user ID from the authenticated user or return a default
+const getUserId = (req: Request): number => {
+  if (req.isAuthenticated() && req.user && 'id' in req.user) {
+    return req.user.id as number;
+  }
+  // Default user ID as fallback (should not be needed in production)
+  return 1;
+};
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // User authentication routes
-  app.post("/api/auth/register", async (req: Request, res: Response) => {
-    try {
-      const userData = insertUserSchema.parse(req.body);
-      const user = await storage.createUser(userData);
-      res.json({ success: true, user: { ...user, password: undefined } });
-    } catch (error) {
-      if (error instanceof ZodError) {
-        const formattedError = fromZodError(error);
-        res.status(400).json({ message: formattedError.message });
-      } else {
-        res.status(500).json({ message: "Failed to register user" });
-      }
-    }
-  });
+  // Setup authentication
+  setupAuth(app);
 
-  app.post("/api/auth/login", async (req: Request, res: Response) => {
+  // Document routes - protected with authentication
+  app.get("/api/documents", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const { username, password } = req.body;
-      const user = await storage.getUserByUsername(username);
-      
-      if (!user || user.password !== password) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-      
-      res.json({ success: true, user: { ...user, password: undefined } });
-    } catch (error) {
-      res.status(500).json({ message: "Login failed" });
-    }
-  });
-
-  // Document routes
-  app.get("/api/documents", async (req: Request, res: Response) => {
-    try {
-      const documents = await storage.getDocumentsByUserId(MOCK_USER_ID);
+      const documents = await storage.getDocumentsByUserId(getUserId(req));
       res.json(documents);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch documents" });
     }
   });
 
-  app.get("/api/documents/:id", async (req: Request, res: Response) => {
+  app.get("/api/documents/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const documentId = parseInt(req.params.id);
       const document = await storage.getDocument(documentId);
@@ -72,18 +59,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/documents", async (req: Request, res: Response) => {
+  app.post("/api/documents", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const documentData = insertDocumentSchema.parse({
         ...req.body,
-        userId: MOCK_USER_ID
+        userId: getUserId(req)
       });
       
       const document = await storage.createDocument(documentData);
       
       // Create activity record
       await storage.createActivity({
-        userId: MOCK_USER_ID,
+        userId: getUserId(req),
         documentId: document.id,
         activityType: "created",
         description: `Created document: ${document.title}`
@@ -100,12 +87,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/documents/:id", async (req: Request, res: Response) => {
+  app.put("/api/documents/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const documentId = parseInt(req.params.id);
       const documentData = insertDocumentSchema.parse({
         ...req.body,
-        userId: MOCK_USER_ID
+        userId: getUserId(req)
       });
       
       const document = await storage.updateDocument(documentId, documentData);
@@ -116,7 +103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create activity record
       await storage.createActivity({
-        userId: MOCK_USER_ID,
+        userId: getUserId(req),
         documentId: document.id,
         activityType: "updated",
         description: `Updated document: ${document.title}`
@@ -133,7 +120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/documents/:id", async (req: Request, res: Response) => {
+  app.delete("/api/documents/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const documentId = parseInt(req.params.id);
       const success = await storage.deleteDocument(documentId);
@@ -144,7 +131,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create activity record
       await storage.createActivity({
-        userId: MOCK_USER_ID,
+        userId: getUserId(req),
         documentId: documentId,
         activityType: "deleted",
         description: `Deleted document ID: ${documentId}`
@@ -157,7 +144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Comment routes
-  app.get("/api/documents/:id/comments", async (req: Request, res: Response) => {
+  app.get("/api/documents/:id/comments", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const documentId = parseInt(req.params.id);
       const comments = await storage.getCommentsByDocumentId(documentId);
@@ -167,20 +154,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/documents/:id/comments", async (req: Request, res: Response) => {
+  app.post("/api/documents/:id/comments", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const documentId = parseInt(req.params.id);
       const commentData = insertCommentSchema.parse({
         ...req.body,
         documentId,
-        userId: MOCK_USER_ID
+        userId: getUserId(req)
       });
       
       const comment = await storage.createComment(commentData);
       
       // Create activity record
       await storage.createActivity({
-        userId: MOCK_USER_ID,
+        userId: getUserId(req),
         documentId: documentId,
         activityType: "commented",
         description: "Added a comment to the document"
@@ -197,7 +184,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Template routes
+  // Template routes - no authentication required
   app.get("/api/templates", async (req: Request, res: Response) => {
     try {
       const { province, type } = req.query;
@@ -223,7 +210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AI Document Generation
-  app.post("/api/ai/generate-document", async (req: Request, res: Response) => {
+  app.post("/api/ai/generate-document", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const requestSchema = z.object({
         documentType: z.string(),
@@ -241,7 +228,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create activity record
       await storage.createActivity({
-        userId: MOCK_USER_ID,
+        userId: getUserId(req),
         activityType: "ai_generated",
         description: `Generated ${documentType} document for ${province}`
       });
@@ -268,7 +255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Document Summary
-  app.post("/api/ai/summarize", async (req: Request, res: Response) => {
+  app.post("/api/ai/summarize", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const requestSchema = z.object({
         documentContent: z.string(),
@@ -281,7 +268,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create activity record
       await storage.createActivity({
-        userId: MOCK_USER_ID,
+        userId: getUserId(req),
         activityType: "ai_summarized",
         description: `Generated a ${detailLevel} summary of a document`
       });
@@ -308,7 +295,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Legal Chat Assistant
-  app.post("/api/ai/chat", async (req: Request, res: Response) => {
+  app.post("/api/ai/chat", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const requestSchema = z.object({
         messages: z.array(z.object({
@@ -323,7 +310,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const response = await legalChatAssistant(messages, province);
       
       // Save to chat history
-      await storage.addChatMessage(MOCK_USER_ID, {
+      await storage.addChatMessage(getUserId(req), {
         role: "assistant",
         content: response
       });
@@ -350,7 +337,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Risk Analysis
-  app.post("/api/ai/analyze-risk", async (req: Request, res: Response) => {
+  app.post("/api/ai/analyze-risk", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const requestSchema = z.object({
         documentContent: z.string(),
@@ -363,7 +350,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create activity record
       await storage.createActivity({
-        userId: MOCK_USER_ID,
+        userId: getUserId(req),
         activityType: "risk_analyzed",
         description: `Analyzed risk for a document under ${province} law`
       });
@@ -390,7 +377,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Provincial Law Information
-  app.get("/api/legal-info/:province/:topic", async (req: Request, res: Response) => {
+  app.get("/api/legal-info/:province/:topic", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const { province, topic } = req.params;
       
@@ -398,7 +385,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create activity record
       await storage.createActivity({
-        userId: MOCK_USER_ID,
+        userId: getUserId(req),
         activityType: "legal_research",
         description: `Researched ${topic} law in ${province}`
       });
@@ -420,9 +407,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Activity routes
-  app.get("/api/activities", async (req: Request, res: Response) => {
+  app.get("/api/activities", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const activities = await storage.getActivitiesByUserId(MOCK_USER_ID);
+      const activities = await storage.getActivitiesByUserId(getUserId(req));
       res.json(activities);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch activities" });

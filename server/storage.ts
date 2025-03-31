@@ -110,6 +110,7 @@ export class MemStorage implements IStorage {
       name: "John Smith",
       email: "john@example.com",
       role: "user",
+      accountType: "individual",
       createdAt: new Date()
     });
     
@@ -241,7 +242,13 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentIds.user++;
-    const user: User = { ...insertUser, id, createdAt: new Date() };
+    const user: User = { 
+      ...insertUser, 
+      id, 
+      role: insertUser.role || "user",
+      accountType: insertUser.accountType || "individual",
+      createdAt: new Date() 
+    };
     this.users.set(id, user);
     return user;
   }
@@ -413,4 +420,186 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+import * as schema from "@shared/schema";
+import { eq } from "drizzle-orm";
+import { db } from "./db";
+import { pool } from "./db";
+import connectPg from "connect-pg-simple";
+import session from "express-session";
+
+const PostgresSessionStore = connectPg(session);
+
+export class DatabaseStorage implements IStorage {
+  sessionStore: session.Store;
+
+  constructor() {
+    this.sessionStore = new PostgresSessionStore({ 
+      pool, 
+      createTableIfMissing: true,
+      tableName: "session" 
+    });
+  }
+
+  // User operations
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(schema.users).where(eq(schema.users.id, id));
+    return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(schema.users).where(eq(schema.users.username, username));
+    return user;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db.insert(schema.users).values({
+      ...insertUser,
+      role: insertUser.role || "user",
+      accountType: insertUser.accountType || "individual"
+    }).returning();
+    return user;
+  }
+  
+  // Document operations
+  async getDocument(id: number): Promise<Document | undefined> {
+    const [document] = await db.select().from(schema.documents).where(eq(schema.documents.id, id));
+    return document;
+  }
+
+  async getDocumentsByUserId(userId: number): Promise<Document[]> {
+    return await db.select().from(schema.documents).where(eq(schema.documents.userId, userId));
+  }
+
+  async createDocument(insertDocument: InsertDocument): Promise<Document> {
+    const [document] = await db.insert(schema.documents).values({
+      ...insertDocument,
+      status: insertDocument.status || "draft"
+    }).returning();
+    return document;
+  }
+
+  async updateDocument(id: number, updateDocument: InsertDocument): Promise<Document | undefined> {
+    const [document] = await db
+      .update(schema.documents)
+      .set({
+        ...updateDocument,
+        status: updateDocument.status || "draft"
+      })
+      .where(eq(schema.documents.id, id))
+      .returning();
+    return document;
+  }
+
+  async deleteDocument(id: number): Promise<boolean> {
+    const result = await db.delete(schema.documents).where(eq(schema.documents.id, id));
+    return !!result;
+  }
+  
+  // Collaboration operations
+  async getCollaborationsByDocumentId(documentId: number): Promise<Collaboration[]> {
+    return await db.select().from(schema.collaborations).where(eq(schema.collaborations.documentId, documentId));
+  }
+
+  async getCollaborationsByUserId(userId: number): Promise<Collaboration[]> {
+    return await db.select().from(schema.collaborations).where(eq(schema.collaborations.userId, userId));
+  }
+
+  async createCollaboration(insertCollaboration: InsertCollaboration): Promise<Collaboration> {
+    const [collaboration] = await db.insert(schema.collaborations).values({
+      ...insertCollaboration,
+      role: insertCollaboration.role || "viewer"
+    }).returning();
+    return collaboration;
+  }
+  
+  // Comment operations
+  async getCommentsByDocumentId(documentId: number): Promise<Comment[]> {
+    return await db.select().from(schema.comments).where(eq(schema.comments.documentId, documentId));
+  }
+
+  async createComment(insertComment: InsertComment): Promise<Comment> {
+    const [comment] = await db.insert(schema.comments).values({
+      ...insertComment,
+      position: insertComment.position || null
+    }).returning();
+    return comment;
+  }
+  
+  // Template operations
+  async getAllTemplates(): Promise<Template[]> {
+    return await db.select().from(schema.templates);
+  }
+
+  async getTemplatesByProvince(province: string): Promise<Template[]> {
+    return await db.select().from(schema.templates).where(eq(schema.templates.province, province));
+  }
+
+  async getTemplatesByType(type: string): Promise<Template[]> {
+    return await db.select().from(schema.templates).where(eq(schema.templates.type, type));
+  }
+
+  async getTemplatesByProvinceAndType(province: string, type: string): Promise<Template[]> {
+    return await db.select()
+      .from(schema.templates)
+      .where(eq(schema.templates.province, province))
+      .where(eq(schema.templates.type, type));
+  }
+  
+  // Chat operations
+  async getChatHistory(userId: number): Promise<ChatHistory | undefined> {
+    const [history] = await db.select().from(schema.chatHistory).where(eq(schema.chatHistory.userId, userId));
+    return history;
+  }
+
+  async addChatMessage(userId: number, message: { role: string, content: string }): Promise<ChatHistory> {
+    const existingHistory = await this.getChatHistory(userId);
+    
+    if (existingHistory) {
+      const messages = JSON.parse(existingHistory.messages as string);
+      messages.push(message);
+      
+      const [updated] = await db
+        .update(schema.chatHistory)
+        .set({ messages: JSON.stringify(messages) })
+        .where(eq(schema.chatHistory.id, existingHistory.id))
+        .returning();
+      
+      return updated;
+    } else {
+      const [history] = await db
+        .insert(schema.chatHistory)
+        .values({
+          userId,
+          messages: JSON.stringify([message])
+        })
+        .returning();
+      
+      return history;
+    }
+  }
+  
+  // Activity operations
+  async getActivitiesByUserId(userId: number): Promise<Activity[]> {
+    return await db.select().from(schema.activities).where(eq(schema.activities.userId, userId));
+  }
+
+  async createActivity(insertActivity: InsertActivity): Promise<Activity> {
+    const [activity] = await db.insert(schema.activities).values({
+      ...insertActivity,
+      documentId: insertActivity.documentId || null
+    }).returning();
+    return activity;
+  }
+  
+  // Legal reference operations
+  async getLegalReferencesByProvince(province: string): Promise<LegalReference[]> {
+    return await db.select().from(schema.legalReferences).where(eq(schema.legalReferences.province, province));
+  }
+
+  async getLegalReferencesByCategory(category: string): Promise<LegalReference[]> {
+    return await db.select().from(schema.legalReferences).where(eq(schema.legalReferences.category, category));
+  }
+}
+
+// Switch from MemStorage to DatabaseStorage
+export const storage = new DatabaseStorage();

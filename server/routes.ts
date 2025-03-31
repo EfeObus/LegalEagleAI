@@ -247,11 +247,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       res.json({ content: generatedContent });
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof ZodError) {
         const formattedError = fromZodError(error);
         res.status(400).json({ message: formattedError.message });
       } else {
+        console.error("Error generating legal document:", error.message);
+        
+        // Check if it's an API quota error (429)
+        if (error.message && error.message.includes("429")) {
+          return res.status(429).json({ 
+            message: "AI service quota exceeded. Please try again later.",
+            error: "RATE_LIMIT_EXCEEDED" 
+          });
+        }
+        
         res.status(500).json({ message: "Failed to generate document" });
       }
     }
@@ -277,11 +287,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       res.json(summary);
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof ZodError) {
         const formattedError = fromZodError(error);
         res.status(400).json({ message: formattedError.message });
       } else {
+        console.error("Error summarizing legal document:", error.message);
+        
+        // Check if it's an API quota error (429)
+        if (error.message && error.message.includes("429")) {
+          return res.status(429).json({ 
+            message: "AI service quota exceeded. Please try again later.",
+            error: "RATE_LIMIT_EXCEEDED" 
+          });
+        }
+        
         res.status(500).json({ message: "Failed to summarize document" });
       }
     }
@@ -309,11 +329,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       res.json({ response });
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof ZodError) {
         const formattedError = fromZodError(error);
         res.status(400).json({ message: formattedError.message });
       } else {
+        console.error("Error with legal chat assistant:", error.message);
+        
+        // Check if it's an API quota error (429)
+        if (error.message && error.message.includes("429")) {
+          return res.status(429).json({ 
+            message: "AI service quota exceeded. Please try again later.",
+            error: "RATE_LIMIT_EXCEEDED" 
+          });
+        }
+        
         res.status(500).json({ message: "Failed to get chat response" });
       }
     }
@@ -339,11 +369,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       res.json(riskAnalysis);
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof ZodError) {
         const formattedError = fromZodError(error);
         res.status(400).json({ message: formattedError.message });
       } else {
+        console.error("Error analyzing legal risk:", error.message);
+        
+        // Check if it's an API quota error (429)
+        if (error.message && error.message.includes("429")) {
+          return res.status(429).json({ 
+            message: "AI service quota exceeded. Please try again later.",
+            error: "RATE_LIMIT_EXCEEDED" 
+          });
+        }
+        
         res.status(500).json({ message: "Failed to analyze risk" });
       }
     }
@@ -364,7 +404,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       res.json(legalInfo);
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Error getting provincial law info:", error.message);
+      
+      // Check if it's an API quota error (429)
+      if (error.message && error.message.includes("429")) {
+        return res.status(429).json({ 
+          message: "API rate limit exceeded. Please try again later.",
+          error: "RATE_LIMIT_EXCEEDED" 
+        });
+      }
+      
       res.status(500).json({ message: "Failed to get legal information" });
     }
   });

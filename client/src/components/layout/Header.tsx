@@ -1,7 +1,7 @@
 import { FC } from "react";
 import { useLocation } from "wouter";
 import { useProvince } from "@/contexts/ProvinceContext";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { FaBars, FaBell, FaMapMarkerAlt, FaChevronDown, FaSignInAlt, FaSignOutAlt } from "react-icons/fa";
 import ProvinceSelector from "@/components/documents/ProvinceSelector";
@@ -12,18 +12,21 @@ interface HeaderProps {
 
 const Header: FC<HeaderProps> = ({ toggleSidebar }) => {
   const { province } = useProvince();
-  const { user, logout } = useUser();
-  const [, setLocation] = useLocation();
+  const { user, logoutMutation } = useAuth();
+  const [, navigate] = useLocation();
   
   const notificationCount = 3; // This would come from a real notification service
   
   const handleLogin = () => {
-    window.location.href = "/auth";
+    navigate("/auth");
   };
   
   const handleLogout = () => {
-    logout();
-    window.location.href = "/auth";
+    logoutMutation.mutate(undefined, {
+      onSuccess: () => {
+        navigate("/auth");
+      }
+    });
   };
 
   return (

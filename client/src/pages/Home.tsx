@@ -43,11 +43,7 @@ const Home: FC = () => {
   ];
 
   const handleGetStarted = () => {
-    if (user) {
-      setLocation('/dashboard');
-    } else {
-      setLocation('/auth');
-    }
+    setLocation(user ? '/dashboard' : '/auth');
   };
 
   return (
@@ -64,7 +60,7 @@ const Home: FC = () => {
             tailored to Canadian provincial and federal laws.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
             <Button size="lg" onClick={handleGetStarted} className="text-lg px-8">
               Get Started
             </Button>
@@ -72,6 +68,23 @@ const Home: FC = () => {
               <Link href="#features">Learn More</Link>
             </Button>
           </div>
+          
+          {!user && (
+            <div className="mt-10 p-6 max-w-2xl mx-auto rounded-lg bg-gradient-to-br from-primary/10 to-blue-500/10 border border-primary/20">
+              <h3 className="text-xl font-semibold mb-2">Don't have an account yet?</h3>
+              <p className="text-neutral-600 mb-4">
+                Create a free account in seconds to start using Tekevwe's AI-powered legal tools.
+              </p>
+              <div className="flex flex-col sm:flex-row justify-center gap-3">
+                <Button onClick={() => setLocation('/auth')} variant="secondary" size="lg" className="px-8 text-lg">
+                  Sign In
+                </Button>
+                <Button onClick={() => setLocation('/auth')} size="lg" className="px-8 text-lg bg-primary text-white hover:bg-primary/90">
+                  Register Now
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </section>
       
@@ -108,7 +121,11 @@ const Home: FC = () => {
             tailored to Canadian law.
           </p>
           
-          <Button size="lg" onClick={handleGetStarted} className="text-lg px-8">
+          <Button 
+            size="lg" 
+            onClick={() => user ? setLocation('/dashboard') : setLocation('/auth')} 
+            className="text-lg px-8"
+          >
             {user ? 'Go to Dashboard' : 'Sign Up Now'}
           </Button>
         </div>
@@ -129,26 +146,26 @@ const Home: FC = () => {
               <div>
                 <h4 className="text-lg font-medium mb-4">Product</h4>
                 <ul className="space-y-2">
-                  <li><a href="#" className="text-neutral-400 hover:text-white">Features</a></li>
-                  <li><a href="#" className="text-neutral-400 hover:text-white">Pricing</a></li>
-                  <li><a href="#" className="text-neutral-400 hover:text-white">FAQ</a></li>
+                  <li><Link href="#features" className="text-neutral-400 hover:text-white">Features</Link></li>
+                  <li><span className="text-neutral-400 cursor-pointer" onClick={handleGetStarted}>Pricing</span></li>
+                  <li><Link href="#features" className="text-neutral-400 hover:text-white">FAQ</Link></li>
                 </ul>
               </div>
               
               <div>
                 <h4 className="text-lg font-medium mb-4">Resources</h4>
                 <ul className="space-y-2">
-                  <li><a href="#" className="text-neutral-400 hover:text-white">Blog</a></li>
-                  <li><a href="#" className="text-neutral-400 hover:text-white">Legal Guides</a></li>
-                  <li><a href="#" className="text-neutral-400 hover:text-white">Templates</a></li>
+                  <li><span className="text-neutral-400 cursor-pointer" onClick={handleGetStarted}>Blog</span></li>
+                  <li><span className="text-neutral-400 cursor-pointer" onClick={handleGetStarted}>Legal Guides</span></li>
+                  <li><Link href="/templates" className="text-neutral-400 hover:text-white">Templates</Link></li>
                 </ul>
               </div>
               
               <div>
                 <h4 className="text-lg font-medium mb-4">Company</h4>
                 <ul className="space-y-2">
-                  <li><a href="#" className="text-neutral-400 hover:text-white">About</a></li>
-                  <li><a href="#" className="text-neutral-400 hover:text-white">Contact</a></li>
+                  <li><span className="text-neutral-400 cursor-pointer" onClick={handleGetStarted}>About</span></li>
+                  <li><span className="text-neutral-400 cursor-pointer" onClick={handleGetStarted}>Contact</span></li>
                   <li>
                     <a 
                       href="mailto:efe.obukohwo@outlook.com" 

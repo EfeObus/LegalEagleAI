@@ -69,7 +69,7 @@ function AppContent() {
           <div className="container mx-auto px-4 py-6 max-w-7xl">
             <Switch>
               <Route path="/">
-                {() => (user ? <Dashboard /> : <Auth />)}
+                {() => <Dashboard />}
               </Route>
               <Route path="/documents">
                 {() => <ProtectedRoute component={Documents} />}

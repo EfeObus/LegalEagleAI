@@ -34,13 +34,27 @@ interface LegalInfo {
 
 const legalTopics = [
   { value: "employment", label: "Employment Law" },
-  { value: "privacy", label: "Privacy & Data Protection" },
-  { value: "corporate", label: "Corporate Law" },
-  { value: "real-estate", label: "Real Estate Law" },
+  { value: "criminal", label: "Criminal Law" },
+  { value: "civil", label: "Civil Law" },
+  { value: "constitutional", label: "Constitutional Law" },
+  { value: "administrative", label: "Administrative Law" },
+  { value: "corporate", label: "Corporate (Business) Law" },
   { value: "contracts", label: "Contract Law" },
-  { value: "intellectual-property", label: "Intellectual Property" },
+  { value: "tort", label: "Tort Law" },
+  { value: "intellectual-property", label: "Intellectual Property Law" },
   { value: "family", label: "Family Law" },
+  { value: "immigration", label: "Immigration Law" },
   { value: "tax", label: "Tax Law" },
+  { value: "bankruptcy", label: "Bankruptcy Law" },
+  { value: "environmental", label: "Environmental Law" },
+  { value: "real-estate", label: "Real Estate (Property) Law" },
+  { value: "health", label: "Health Law" },
+  { value: "cyber", label: "Cyber Law" },
+  { value: "human-rights", label: "Human Rights Law" },
+  { value: "international", label: "International Law" },
+  { value: "maritime", label: "Maritime (Admiralty) Law" },
+  { value: "consumer-protection", label: "Consumer Protection Law" },
+  { value: "privacy", label: "Privacy & Data Protection" },
 ];
 
 const LegalResearch: FC = () => {
@@ -154,7 +168,7 @@ const LegalResearch: FC = () => {
                 <SelectTrigger>
                   <SelectValue placeholder="Select a legal topic" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-80 overflow-y-auto">
                   {legalTopics.map((topic) => (
                     <SelectItem key={topic.value} value={topic.value}>
                       {topic.label}
@@ -175,18 +189,30 @@ const LegalResearch: FC = () => {
               <Separator className="my-4" />
               
               <div className="space-y-3">
-                <div className="flex items-center space-x-2 text-sm">
+                <Button 
+                  variant="ghost" 
+                  className="flex items-center space-x-2 text-sm w-full justify-start px-2 h-auto py-1"
+                  onClick={() => setSelectedTopic(selectedTopic)}
+                >
                   <FaBalanceScale className="text-primary" />
                   <span>Laws & Regulations</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm">
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="flex items-center space-x-2 text-sm w-full justify-start px-2 h-auto py-1"
+                  onClick={() => setSelectedTopic(selectedTopic)}
+                >
                   <FaGavel className="text-primary" />
                   <span>Case Law</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm">
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="flex items-center space-x-2 text-sm w-full justify-start px-2 h-auto py-1"
+                  onClick={() => setSelectedTopic(selectedTopic)}
+                >
                   <FaNewspaper className="text-primary" />
                   <span>Recent Updates</span>
-                </div>
+                </Button>
               </div>
             </CardContent>
           </Card>

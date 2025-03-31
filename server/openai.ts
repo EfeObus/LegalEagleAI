@@ -37,12 +37,12 @@ export async function generateLegalDocument(
       model: "gpt-4o",
       messages: [
         {
-          role: "system",
+          role: "system" as const,
           content:
             "You are a Canadian legal document specialist with expertise in generating accurate, compliant legal documents for all Canadian provinces."
         },
         {
-          role: "user",
+          role: "user" as const,
           content: prompt
         }
       ],
@@ -71,12 +71,12 @@ export async function summarizeLegalDocument(
       model: "gpt-4o",
       messages: [
         {
-          role: "system",
+          role: "system" as const,
           content:
             "You are a legal document analysis expert specializing in Canadian law. Summarize the legal document provided, extract key points, and identify potential risks or issues."
         },
         {
-          role: "user",
+          role: "user" as const,
           content: `
             Please analyze this legal document and provide:
             1. A ${detailLevel === "brief" ? "brief" : "comprehensive"} summary
@@ -115,16 +115,22 @@ export async function legalChatAssistant(
   try {
     // Add system message with Canadian legal context
     const systemMessage = {
-      role: "system",
+      role: "system" as const,
       content: `You are a Canadian legal assistant specializing in ${province} provincial law. 
       Provide accurate, helpful responses about Canadian legal matters, with particular expertise in ${province} law.
       Always mention when legal advice should be sought from a qualified lawyer. 
       Base your responses on Canadian federal and provincial legal frameworks.`
     };
 
+    // Convert messages to the correct types
+    const typedMessages = messages.map(msg => ({
+      role: msg.role as "user" | "assistant" | "system",
+      content: msg.content
+    }));
+
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
-      messages: [systemMessage, ...messages],
+      messages: [systemMessage, ...typedMessages],
       temperature: 0.7,
     });
 
@@ -149,11 +155,11 @@ export async function analyzeLegalRisk(
       model: "gpt-4o",
       messages: [
         {
-          role: "system",
+          role: "system" as const,
           content: `You are a legal risk analysis expert specializing in Canadian law, particularly for the province of ${province}.`
         },
         {
-          role: "user",
+          role: "user" as const,
           content: `
             Analyze this legal document for risks and issues under ${province} law. Provide:
             1. An overall risk assessment (Low, Medium, High)
@@ -194,22 +200,47 @@ export async function getProvincialLawInfo(
   recentChanges: string[];
 }> {
   try {
+    // Create a comprehensive system message with detailed instructions
+    const systemPrompt = `
+      You are a specialized Canadian legal research expert with deep knowledge of both federal and provincial laws across Canada.
+      
+      Your expertise includes:
+      - All areas of Canadian law including criminal, civil, constitutional, administrative, corporate, contract, tort, intellectual property, family, immigration, tax, bankruptcy, environmental, real estate, health, cyber, human rights, international, maritime, and consumer protection law
+      - Federal and provincial jurisdictional differences
+      - Canadian legal history and precedent
+      - Recent legislative changes and judicial decisions
+      - Interpretation of statutes, regulations, and case law
+      
+      When researching legal topics, always include:
+      - Important legislation and statutes at both federal and provincial levels
+      - Landmark court cases and judicial precedents
+      - Recent amendments, legislative changes, or judicial rulings
+      - Jurisdictional considerations between provinces and the federal government
+      - Practical implications for legal practitioners and ordinary citizens
+      
+      Your responses should be detailed, accurate, and reflect the current state of Canadian law as of March 2025.
+    `;
+
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
-          role: "system",
-          content: "You are a Canadian legal research specialist with expertise in provincial laws across Canada."
+          role: "system" as const,
+          content: systemPrompt
         },
         {
-          role: "user",
+          role: "user" as const,
           content: `
-            Provide information about ${legalTopic} law in the province of ${province}, Canada. Include:
-            1. Key legal provisions and statutes
-            2. Relevant case law and precedents
-            3. Recent changes or updates to the law
+            Provide comprehensive information about ${legalTopic} in the province of ${province}, Canada. 
+            
+            Research should include:
+            1. Key legal provisions and statutes (both provincial and relevant federal laws)
+            2. Significant case law and precedents from ${province} courts and the Supreme Court of Canada
+            3. Recent legislative changes or judicial decisions (within the last 2-3 years)
+            4. How this area of law is specifically applied or interpreted in ${province} compared to other provinces
             
             Format your response as JSON with fields 'keyProvisions' (array), 'relevantCases' (array), and 'recentChanges' (array).
+            Be thorough and specific to ${province} law while including relevant federal context.
           `
         }
       ],

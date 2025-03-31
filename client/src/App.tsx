@@ -12,6 +12,9 @@ import LegalResearch from "@/pages/LegalResearch";
 import Collaboration from "@/pages/Collaboration";
 import RiskAnalysis from "@/pages/RiskAnalysis";
 import Auth from "@/pages/Auth";
+import Home from "@/pages/Home";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import TermsOfService from "@/pages/TermsOfService";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import AIChatAssistant from "@/components/layout/AIChatAssistant";
@@ -41,11 +44,14 @@ function AppContent() {
   const { user } = useUser();
   const [location] = useLocation();
   
-  // Don't show the main app layout on the auth page
-  if (location === "/auth") {
+  // Don't show the main app layout on public pages
+  if (location === "/auth" || location === "/" || location === "/privacy-policy" || location === "/terms-of-service") {
     return (
       <Switch>
         <Route path="/auth" component={Auth} />
+        <Route path="/" component={Home} />
+        <Route path="/privacy-policy" component={PrivacyPolicy} />
+        <Route path="/terms-of-service" component={TermsOfService} />
       </Switch>
     );
   }

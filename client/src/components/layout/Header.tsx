@@ -1,8 +1,9 @@
 import { FC } from "react";
+import { useLocation } from "wouter";
 import { useProvince } from "@/contexts/ProvinceContext";
 import { useUser } from "@/contexts/UserContext";
 import { Button } from "@/components/ui/button";
-import { FaBars, FaBell, FaMapMarkerAlt, FaChevronDown } from "react-icons/fa";
+import { FaBars, FaBell, FaMapMarkerAlt, FaChevronDown, FaSignInAlt, FaSignOutAlt } from "react-icons/fa";
 import ProvinceSelector from "@/components/documents/ProvinceSelector";
 
 interface HeaderProps {
@@ -11,9 +12,19 @@ interface HeaderProps {
 
 const Header: FC<HeaderProps> = ({ toggleSidebar }) => {
   const { province } = useProvince();
-  const { user } = useUser();
+  const { user, logout } = useUser();
+  const [, setLocation] = useLocation();
   
   const notificationCount = 3; // This would come from a real notification service
+  
+  const handleLogin = () => {
+    setLocation("/auth");
+  };
+  
+  const handleLogout = () => {
+    logout();
+    setLocation("/auth");
+  };
 
   return (
     <header className="bg-white border-b border-neutral-200 sticky top-0 z-50">
@@ -54,13 +65,24 @@ const Header: FC<HeaderProps> = ({ toggleSidebar }) => {
             </span>
           </Button>
           
-          <div className="hidden md:flex items-center p-1 rounded-md hover:bg-neutral-100">
-            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-medium text-sm">
-              {user?.name?.split(' ').map(n => n[0]).join('') || 'JS'}
+          {user ? (
+            <div className="flex items-center gap-2">
+              <div className="hidden md:flex items-center p-1 rounded-md hover:bg-neutral-100">
+                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-medium text-sm">
+                  {user?.name?.split(' ').map(n => n[0]).join('') || 'JS'}
+                </div>
+                <span className="ml-2 text-sm font-medium">{user?.name || 'John Smith'}</span>
+                <FaChevronDown className="ml-2 text-xs text-neutral-400" />
+              </div>
+              <Button variant="ghost" size="sm" onClick={handleLogout} className="text-sm">
+                <FaSignOutAlt className="mr-1" /> Logout
+              </Button>
             </div>
-            <span className="ml-2 text-sm font-medium">{user?.name || 'John Smith'}</span>
-            <FaChevronDown className="ml-2 text-xs text-neutral-400" />
-          </div>
+          ) : (
+            <Button variant="outline" size="sm" onClick={handleLogin} className="text-sm">
+              <FaSignInAlt className="mr-1" /> Login / Register
+            </Button>
+          )}
         </div>
       </div>
     </header>

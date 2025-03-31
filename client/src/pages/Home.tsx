@@ -43,7 +43,7 @@ const Home: FC = () => {
   ];
 
   const handleGetStarted = () => {
-    setLocation(user ? '/dashboard' : '/auth');
+    window.location.href = user ? '/dashboard' : '/auth';
   };
 
   return (
@@ -64,8 +64,13 @@ const Home: FC = () => {
             <Button size="lg" onClick={handleGetStarted} className="text-lg px-8">
               Get Started
             </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8" asChild>
-              <Link href="#features">Learn More</Link>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="text-lg px-8"
+              onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+            >
+              Learn More
             </Button>
           </div>
           
@@ -76,10 +81,10 @@ const Home: FC = () => {
                 Create a free account in seconds to start using Tekevwe's AI-powered legal tools.
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-3">
-                <Button onClick={() => setLocation('/auth')} variant="secondary" size="lg" className="px-8 text-lg">
+                <Button onClick={() => window.location.href = '/auth'} variant="secondary" size="lg" className="px-8 text-lg">
                   Sign In
                 </Button>
-                <Button onClick={() => setLocation('/auth')} size="lg" className="px-8 text-lg bg-primary text-white hover:bg-primary/90">
+                <Button onClick={() => window.location.href = '/auth'} size="lg" className="px-8 text-lg bg-primary text-white hover:bg-primary/90">
                   Register Now
                 </Button>
               </div>
@@ -123,7 +128,7 @@ const Home: FC = () => {
           
           <Button 
             size="lg" 
-            onClick={() => user ? setLocation('/dashboard') : setLocation('/auth')} 
+            onClick={() => window.location.href = user ? '/dashboard' : '/auth'} 
             className="text-lg px-8"
           >
             {user ? 'Go to Dashboard' : 'Sign Up Now'}
@@ -146,9 +151,9 @@ const Home: FC = () => {
               <div>
                 <h4 className="text-lg font-medium mb-4">Product</h4>
                 <ul className="space-y-2">
-                  <li><Link href="#features" className="text-neutral-400 hover:text-white">Features</Link></li>
+                  <li><a href="#" className="text-neutral-400 hover:text-white" onClick={(e) => { e.preventDefault(); document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' }) }}>Features</a></li>
                   <li><span className="text-neutral-400 cursor-pointer" onClick={handleGetStarted}>Pricing</span></li>
-                  <li><Link href="#features" className="text-neutral-400 hover:text-white">FAQ</Link></li>
+                  <li><a href="#" className="text-neutral-400 hover:text-white" onClick={(e) => { e.preventDefault(); document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' }) }}>FAQ</a></li>
                 </ul>
               </div>
               
@@ -157,7 +162,7 @@ const Home: FC = () => {
                 <ul className="space-y-2">
                   <li><span className="text-neutral-400 cursor-pointer" onClick={handleGetStarted}>Blog</span></li>
                   <li><span className="text-neutral-400 cursor-pointer" onClick={handleGetStarted}>Legal Guides</span></li>
-                  <li><Link href="/templates" className="text-neutral-400 hover:text-white">Templates</Link></li>
+                  <li><span className="text-neutral-400 cursor-pointer" onClick={handleGetStarted}>Templates</span></li>
                 </ul>
               </div>
               
@@ -185,12 +190,12 @@ const Home: FC = () => {
             </p>
             
             <div className="flex space-x-4">
-              <Link href="/privacy-policy" className="text-neutral-400 hover:text-white">
+              <a href="/privacy-policy" className="text-neutral-400 hover:text-white">
                 Privacy Policy
-              </Link>
-              <Link href="/terms-of-service" className="text-neutral-400 hover:text-white">
+              </a>
+              <a href="/terms-of-service" className="text-neutral-400 hover:text-white">
                 Terms of Service
-              </Link>
+              </a>
             </div>
           </div>
         </div>

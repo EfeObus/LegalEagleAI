@@ -26,13 +26,12 @@ import { useState, useEffect } from "react";
 // Protected route component
 function ProtectedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>; [key: string]: any }) {
   const { user } = useUser();
-  const [, setLocation] = useLocation();
   
   useEffect(() => {
     if (!user) {
-      setLocation("/auth");
+      window.location.href = "/auth";
     }
-  }, [user, setLocation]);
+  }, [user]);
   
   if (!user) return null;
   
@@ -44,18 +43,36 @@ function AppContent() {
   const { user } = useUser();
   const [location] = useLocation();
   
-  // Don't show the main app layout on public pages
-  if (location === "/auth" || location === "/" || location === "/privacy-policy" || location === "/terms-of-service") {
+  // Public pages (no layout)
+  const isPublicPage = location === "/" || location === "/privacy-policy" || location === "/terms-of-service" || location === "/auth";
+  
+  // Check if page is a protected route that needs authentication
+  const isProtectedPage = location === "/dashboard" || location === "/documents" || 
+                       location === "/templates" || location === "/ai-assistant" || 
+                       location === "/contract-generator" || location === "/legal-research" || 
+                       location === "/collaboration" || location === "/risk-analysis";
+  
+  // If trying to access protected page without auth, redirect to auth
+  useEffect(() => {
+    if (isProtectedPage && !user) {
+      window.location.href = "/auth";
+    }
+  }, [isProtectedPage, user, location]);
+  
+  // Public pages layout
+  if (isPublicPage) {
     return (
       <Switch>
-        <Route path="/auth" component={Auth} />
         <Route path="/" component={Home} />
+        <Route path="/auth" component={Auth} />
         <Route path="/privacy-policy" component={PrivacyPolicy} />
         <Route path="/terms-of-service" component={TermsOfService} />
+        <Route component={NotFound} />
       </Switch>
     );
   }
   
+  // Protected app layout
   return (
     <div className="min-h-screen flex flex-col">
       <Header 
@@ -68,30 +85,14 @@ function AppContent() {
         <main className="flex-1 overflow-y-auto bg-neutral-50 h-full">
           <div className="container mx-auto px-4 py-6 max-w-7xl">
             <Switch>
-              <Route path="/">
-                {() => <Dashboard />}
-              </Route>
-              <Route path="/documents">
-                {() => <ProtectedRoute component={Documents} />}
-              </Route>
-              <Route path="/templates">
-                {() => <ProtectedRoute component={Templates} />}
-              </Route>
-              <Route path="/ai-assistant">
-                {() => <ProtectedRoute component={AIAssistant} />}
-              </Route>
-              <Route path="/contract-generator">
-                {() => <ProtectedRoute component={ContractGenerator} />}
-              </Route>
-              <Route path="/legal-research">
-                {() => <ProtectedRoute component={LegalResearch} />}
-              </Route>
-              <Route path="/collaboration">
-                {() => <ProtectedRoute component={Collaboration} />}
-              </Route>
-              <Route path="/risk-analysis">
-                {() => <ProtectedRoute component={RiskAnalysis} />}
-              </Route>
+              <Route path="/dashboard" component={Dashboard} />
+              <Route path="/documents" component={Documents} />
+              <Route path="/templates" component={Templates} />
+              <Route path="/ai-assistant" component={AIAssistant} />
+              <Route path="/contract-generator" component={ContractGenerator} />
+              <Route path="/legal-research" component={LegalResearch} />
+              <Route path="/collaboration" component={Collaboration} />
+              <Route path="/risk-analysis" component={RiskAnalysis} />
               <Route component={NotFound} />
             </Switch>
           </div>

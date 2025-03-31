@@ -18,12 +18,12 @@ const Header: FC<HeaderProps> = ({ toggleSidebar }) => {
   const notificationCount = 3; // This would come from a real notification service
   
   const handleLogin = () => {
-    setLocation("/auth");
+    window.location.href = "/auth";
   };
   
   const handleLogout = () => {
     logout();
-    setLocation("/auth");
+    window.location.href = "/auth";
   };
 
   return (

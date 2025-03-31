@@ -18,6 +18,7 @@ import TermsOfService from "@/pages/TermsOfService";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import AIChatAssistant from "@/components/layout/AIChatAssistant";
+import Footer from "@/components/layout/Footer";
 import { ProvinceProvider } from "@/contexts/ProvinceContext";
 import { UserProvider } from "@/contexts/UserContext";
 import { useUser } from "@/contexts/UserContext";
@@ -62,13 +63,16 @@ function AppContent() {
   // Public pages layout
   if (isPublicPage) {
     return (
-      <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/auth" component={Auth} />
-        <Route path="/privacy-policy" component={PrivacyPolicy} />
-        <Route path="/terms-of-service" component={TermsOfService} />
-        <Route component={NotFound} />
-      </Switch>
+      <>
+        <Switch>
+          <Route path="/" component={Home} />
+          <Route path="/auth" component={Auth} />
+          <Route path="/privacy-policy" component={PrivacyPolicy} />
+          <Route path="/terms-of-service" component={TermsOfService} />
+          <Route component={NotFound} />
+        </Switch>
+        {location !== "/" && <Footer />}
+      </>
     );
   }
   
@@ -79,24 +83,27 @@ function AppContent() {
         toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
       />
       
-      <div className="flex flex-1 h-[calc(100vh-55px)]">
+      <div className="flex flex-1">
         <Sidebar isOpen={isSidebarOpen} />
         
-        <main className="flex-1 overflow-y-auto bg-neutral-50 h-full">
-          <div className="container mx-auto px-4 py-6 max-w-7xl">
-            <Switch>
-              <Route path="/dashboard" component={Dashboard} />
-              <Route path="/documents" component={Documents} />
-              <Route path="/templates" component={Templates} />
-              <Route path="/ai-assistant" component={AIAssistant} />
-              <Route path="/contract-generator" component={ContractGenerator} />
-              <Route path="/legal-research" component={LegalResearch} />
-              <Route path="/collaboration" component={Collaboration} />
-              <Route path="/risk-analysis" component={RiskAnalysis} />
-              <Route component={NotFound} />
-            </Switch>
-          </div>
-        </main>
+        <div className="flex-1 flex flex-col">
+          <main className="flex-1 overflow-y-auto bg-neutral-50">
+            <div className="container mx-auto px-4 py-6 max-w-7xl">
+              <Switch>
+                <Route path="/dashboard" component={Dashboard} />
+                <Route path="/documents" component={Documents} />
+                <Route path="/templates" component={Templates} />
+                <Route path="/ai-assistant" component={AIAssistant} />
+                <Route path="/contract-generator" component={ContractGenerator} />
+                <Route path="/legal-research" component={LegalResearch} />
+                <Route path="/collaboration" component={Collaboration} />
+                <Route path="/risk-analysis" component={RiskAnalysis} />
+                <Route component={NotFound} />
+              </Switch>
+            </div>
+          </main>
+          <Footer />
+        </div>
       </div>
       
       {user && <AIChatAssistant />}

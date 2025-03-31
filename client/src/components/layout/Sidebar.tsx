@@ -1,5 +1,4 @@
-import { FC } from "react";
-import { Link, useLocation } from "wouter";
+import { FC, useEffect, useState } from "react";
 import { 
   FaTachometerAlt, 
   FaFileAlt, 
@@ -9,7 +8,8 @@ import {
   FaSearch, 
   FaUsers, 
   FaChartLine,
-  FaHeadset
+  FaHeadset,
+  FaHome
 } from "react-icons/fa";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,8 @@ const sidebarItems = [
   {
     heading: "Main",
     items: [
-      { icon: <FaTachometerAlt />, name: "Dashboard", href: "/" },
+      { icon: <FaHome />, name: "Home", href: "/" },
+      { icon: <FaTachometerAlt />, name: "Dashboard", href: "/dashboard" },
       { icon: <FaFileAlt />, name: "My Documents", href: "/documents" },
       { icon: <FaCopy />, name: "Templates", href: "/templates" },
       { icon: <FaRobot />, name: "AI Assistant", href: "/ai-assistant" },
@@ -40,7 +41,11 @@ const sidebarItems = [
 ];
 
 const Sidebar: FC<SidebarProps> = ({ isOpen }) => {
-  const [location] = useLocation();
+  const [currentPath, setCurrentPath] = useState("/");
+  
+  useEffect(() => {
+    setCurrentPath(window.location.pathname);
+  }, []);
   
   return (
     <aside 
@@ -57,29 +62,33 @@ const Sidebar: FC<SidebarProps> = ({ isOpen }) => {
             </h3>
             
             {section.items.map((item, j) => (
-              <Link href={item.href} key={j}>
-                <a 
-                  className={cn(
-                    "flex items-center px-3 py-2 text-sm font-medium rounded-md",
-                    location === item.href 
-                      ? "bg-primary/10 text-primary border-l-4 border-primary" 
-                      : "text-neutral-700 hover:bg-neutral-100"
-                  )}
-                >
-                  <span className={cn(
-                    "w-5",
-                    location === item.href ? "text-primary" : "text-neutral-500"
-                  )}>
-                    {item.icon}
+              <a 
+                key={j}
+                href={item.href}
+                className={cn(
+                  "flex items-center px-3 py-2 text-sm font-medium rounded-md",
+                  currentPath === item.href 
+                    ? "bg-primary/10 text-primary border-l-4 border-primary" 
+                    : "text-neutral-700 hover:bg-neutral-100"
+                )}
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = item.href;
+                }}
+              >
+                <span className={cn(
+                  "w-5",
+                  currentPath === item.href ? "text-primary" : "text-neutral-500"
+                )}>
+                  {item.icon}
+                </span>
+                <span className="ml-3">{item.name}</span>
+                {item.badge && (
+                  <span className="ml-auto bg-primary/20 text-primary text-xs py-0.5 px-1.5 rounded">
+                    {item.badge}
                   </span>
-                  <span className="ml-3">{item.name}</span>
-                  {item.badge && (
-                    <span className="ml-auto bg-primary/20 text-primary text-xs py-0.5 px-1.5 rounded">
-                      {item.badge}
-                    </span>
-                  )}
-                </a>
-              </Link>
+                )}
+              </a>
             ))}
           </div>
         ))}

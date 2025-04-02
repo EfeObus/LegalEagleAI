@@ -1,17 +1,14 @@
-import type { Express, Request, Response, NextFunction } from "express";
-import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { 
-  insertDocumentSchema, 
-  insertUserSchema,
+import {
   insertCommentSchema,
-  insertChatHistorySchema,
-  insertActivitySchema
+  insertDocumentSchema
 } from "@shared/schema";
-import { generateLegalDocument, summarizeLegalDocument, legalChatAssistant, analyzeLegalRisk, getProvincialLawInfo } from "./openai";
+import type { Express, NextFunction, Request, Response } from "express";
+import { createServer, type Server } from "http";
 import { z, ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth } from "./auth";
+import { analyzeLegalRisk, generateLegalDocument, getProvincialLawInfo, legalChatAssistant, summarizeLegalDocument } from "./openai";
+import { storage } from "./storage";
 
 // Middleware to check if user is authenticated
 const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {

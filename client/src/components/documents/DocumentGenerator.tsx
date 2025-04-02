@@ -1,41 +1,41 @@
-import { FC, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useProvince } from "@/contexts/ProvinceContext";
-import { useDocumentTypes } from "@/hooks/useDocumentTypes";
-import { 
-  Form, 
-  FormControl, 
-  FormDescription, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { useProvince } from "@/contexts/ProvinceContext";
 import { toast } from "@/hooks/use-toast";
+import { useDocumentTypes } from "@/hooks/useDocumentTypes";
+import { apiRequest } from "@/lib/queryClient";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
+import { FC, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 const formSchema = z.object({
   documentType: z.string({
@@ -121,6 +121,14 @@ const DocumentGenerator: FC = () => {
                 Generated Document
               </TabsTrigger>
             </TabsList>
+            
+            <TabsContent value="preview">
+              {generatedContent && (
+                <div className="whitespace-pre-wrap font-mono text-sm bg-muted p-4 rounded-lg">
+                  {generatedContent}
+                </div>
+              )}
+            </TabsContent>
             
             <TabsContent value="form">
               <Form {...form}>
@@ -255,9 +263,38 @@ const DocumentGenerator: FC = () => {
             Powered by AI with {province} legal knowledge
           </p>
           {generatedContent && (
-            <Button variant="outline">
-              Save Document
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  const blob = new Blob([generatedContent], { type: 'text/plain' });
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `${form.getValues('title') || 'legal-document'}.txt`;
+                  a.click();
+                  window.URL.revokeObjectURL(url);
+                }}
+              >
+                Download as Text
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  const preHtml = `<html><head><style>body{font-family:Arial,sans-serif;line-height:1.6;max-width:800px;margin:20px auto;padding:20px;}</style></head><body>`;
+                  const postHtml = '</body></html>';
+                  const blob = new Blob([preHtml + generatedContent.replace(/\n/g, '<br>') + postHtml], { type: 'text/html' });
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `${form.getValues('title') || 'legal-document'}.html`;
+                  a.click();
+                  window.URL.revokeObjectURL(url);
+                }}
+              >
+                Download as HTML
+              </Button>
+            </div>
           )}
         </CardFooter>
       </Card>

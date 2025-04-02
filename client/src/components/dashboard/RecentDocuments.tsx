@@ -1,25 +1,25 @@
-import { FC } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { FaFileAlt, FaEdit, FaDownload, FaEllipsisV } from "react-icons/fa";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { Document } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
+import { Document } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
+import { FC } from "react";
+import { FaDownload, FaEdit, FaEllipsisV, FaFileAlt } from "react-icons/fa";
 
 const statusColors = {
   Active: "bg-success/10 text-success",

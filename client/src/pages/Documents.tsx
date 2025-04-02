@@ -1,34 +1,33 @@
-import { FC, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import {
-  FaPlus, 
-  FaFilter, 
-  FaSearch,
-  FaSortAmountDown,
-} from "react-icons/fa";
+import RecentDocuments from "@/components/dashboard/RecentDocuments";
+import DocumentEditor from "@/components/documents/DocumentEditor";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  DialogTitle
 } from "@/components/ui/dialog";
-import { 
+import {
   DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuCheckboxItem,
+  DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Document } from "@shared/schema";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import DocumentEditor from "@/components/documents/DocumentEditor";
-import RecentDocuments from "@/components/dashboard/RecentDocuments";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Document } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
+import { FC, useState } from "react";
+import {
+  FaFilter,
+  FaPlus,
+  FaSearch,
+  FaSortAmountDown,
+} from "react-icons/fa";
 
 const Documents: FC = () => {
   const [searchQuery, setSearchQuery] = useState("");

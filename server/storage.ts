@@ -1,20 +1,17 @@
 import {
-  User,
-  InsertUser,
-  Document,
-  InsertDocument,
-  Collaboration,
-  InsertCollaboration,
-  Comment,
-  InsertComment,
-  Template,
-  InsertTemplate,
-  ChatHistory,
-  InsertChatHistory,
   Activity,
+  ChatHistory,
+  Collaboration,
+  Comment,
+  Document,
   InsertActivity,
+  InsertCollaboration,
+  InsertComment,
+  InsertDocument,
+  InsertUser,
   LegalReference,
-  InsertLegalReference
+  Template,
+  User
 } from "@shared/schema";
 
 // Interface for all storage operations
@@ -421,11 +418,10 @@ export class MemStorage implements IStorage {
 }
 
 import * as schema from "@shared/schema";
-import { eq } from "drizzle-orm";
-import { db } from "./db";
-import { pool } from "./db";
 import connectPg from "connect-pg-simple";
+import { eq } from "drizzle-orm";
 import session from "express-session";
+import { db, pool } from "./db";
 
 const PostgresSessionStore = connectPg(session);
 
